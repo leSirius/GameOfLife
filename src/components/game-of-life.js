@@ -22,9 +22,10 @@ export default function GameOfLife() {
 
   function clickToSet(e) {
     if (start) { return; }
+    const ratio = window.devicePixelRatio || 1;
     const gridSize = 20;                      // do check with canvas.js
-    const x = e.clientX-e.currentTarget.offsetLeft+e.currentTarget.scrollLeft,
-          y = e.clientY-e.currentTarget.offsetTop+e.currentTarget.scrollTop;
+    const x = (e.clientX-e.currentTarget.offsetLeft+e.currentTarget.scrollLeft)*ratio,
+          y = (e.clientY-e.currentTarget.offsetTop+e.currentTarget.scrollTop)*ratio;
     const indX = Math.floor(x/gridSize);
     const indY = Math.floor(y/gridSize);
     const newMap = deepCopy(gameMap);

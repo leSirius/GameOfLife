@@ -5,6 +5,10 @@ export const liveColor = 'rgb(120,150,120)'
 //export const civilColor = 'rgb(100,100,210)'
 export default function useInit(canvasRef, gameMap, gridSize, width, height) {
   useEffect(() => {
+    const canvas = canvasRef.current;
+    const ratio = window.devicePixelRatio || 1;
+    canvas.style.width = `${canvas.width/ratio}px`;
+    canvas.style.height = `${canvas.height/ratio}px`;
     const ctx = canvasRef.current.getContext('2d');
     drawAxis();
 
@@ -12,6 +16,7 @@ export default function useInit(canvasRef, gameMap, gridSize, width, height) {
       ctx.save();
       ctx.strokeStyle = axisColor;
       ctx.lineWidth = 1;
+      const ratio = window.devicePixelRatio || 1;
       for (let i=gridSize;i<width;i+=gridSize){
         ctx.beginPath();
         ctx.moveTo(0, i);
@@ -26,8 +31,8 @@ export default function useInit(canvasRef, gameMap, gridSize, width, height) {
       }
       ctx.restore();
     }
-
   }, []);
+
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d');
     initData(ctx, gameMap, gridSize);
