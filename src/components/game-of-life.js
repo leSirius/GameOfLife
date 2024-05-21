@@ -18,7 +18,8 @@ export default function GameOfLife() {
   const [gameMap, setGameMap] = useState(initialArray(mapSize, density));
   const [start, setStart] = useState(false);
 
-  const [ratio,setRatio] = useState(window?.devicePixelRatio || 1);
+  const initialRatio = typeof window !== "undefined"? window.devicePixelRatio:1
+  const [ratio,setRatio] = useState(initialRatio);
   const [liveColor, setLiveColor] = useState(defaultLiveColor);
   const [axisColor, setAxisColor] = useState(defaultAxisColor);
   const [gridSize, setGridSize] = useState(defaultGridSize);
