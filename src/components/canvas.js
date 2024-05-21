@@ -1,43 +1,41 @@
 import {useEffect, useRef} from "react";
-import useInit, { liveColor} from "@/lib/useInit";
+import useInit, { paintGrid } from "@/lib/useInit";
 
-const interval = 250, gridSize = 20;
-export default function Canvas({gameMap, start, setGameMap}) {
+
+
+export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, gridSize, interval, liveColor, axisColor}) {
   const canvasRef = useRef(null);
   const animateId = useRef(0);
+  const lastColor = useRef(liveColor);
+
   const size = gameMap.length*gridSize;
-
-
-  useInit(canvasRef, gameMap, gridSize, size, size);
+  useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor});
 
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d');
-
-    let lastUpdate;
     if (start) {
       animateId.current = requestAnimationFrame((current)=>{update(current, ctx, gameMap, gridSize)});
     }
 
+    let lastUpdate;
     function update(current, ctx, tempMap, gridSize) {
       lastUpdate = lastUpdate||current;
       let newMap;
       if (current-lastUpdate>interval) {
         lastUpdate = current;
-        //newMap = calMapState(tempMap);
-        //rePaintMap(ctx, newMap, tempMap, gridSize);
-        newMap = merge(ctx, tempMap, gridSize);
+        newMap = merge(ctx, tempMap, gridSize, liveColor, lastColor);
         setGameMap(newMap);
       }
       animateId.current = requestAnimationFrame((current)=>{update(current, ctx, newMap||tempMap, gridSize)});
     }
     return ()=>{ cancelAnimationFrame(animateId.current); }
-  }, [start]);
+  }, [start, liveColor]);
 
   return <canvas ref={canvasRef} width={size} height={size} className='bg-black' ></canvas>
 }
 
 // merge calMapState and rePaint to save one iteration.
-function merge(ctx, tempMap, gridSize){
+function merge(ctx, tempMap, gridSize, liveColor, lastColor){
   let hasDif = false;
   const size = tempMap.length;
   const data = emptyArray(size);
@@ -55,13 +53,18 @@ function merge(ctx, tempMap, gridSize){
     for (let j=0;j<size;j++) {
       data[i][j] = getRules(data[i][j], tempMap[i][j]);
       if (data[i][j]!==tempMap[i][j]) {
-        paintGrid(ctx, i, j, gridSize, size, size, true);
-        data[i][j]!==0&&paintGrid(ctx, i, j, gridSize, size, size, false);
+        data[i][j]===0?
+          paintGrid(ctx, i, j, gridSize, size, size, true):
+          paintGrid(ctx, i, j, gridSize, size, size, false);
         hasDif = true;
+      }
+      else if(data[i][j]!==0&&lastColor.current!==liveColor){
+        paintGrid(ctx, i, j, gridSize, size, size, false);
       }
     }
   }
   ctx.restore();
+  lastColor.current = liveColor;
   if (!hasDif){
     const pressSpace = new KeyboardEvent('keydown', {key:' '});
     document.dispatchEvent(pressSpace);
@@ -131,6 +134,7 @@ function emptyArray(len) {
   return data;
 }
 
+/*
 function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
   switch (true){
     case (i===0&&j===0):{
@@ -176,6 +180,8 @@ function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
     }
   }
 }
+
+ */
 
 /*
 function getDataAt(dataMap, i, j){
