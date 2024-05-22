@@ -1,7 +1,6 @@
+'use client'
 import {useEffect, useRef} from "react";
 import useInit, { paintGrid } from "@/lib/useInit";
-
-
 
 export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, gridSize, interval, liveColor, axisColor}) {
   const canvasRef = useRef(null);
@@ -29,7 +28,7 @@ export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, grid
       animateId.current = requestAnimationFrame((current)=>{update(current, ctx, newMap||tempMap, gridSize)});
     }
     return ()=>{ cancelAnimationFrame(animateId.current); }
-  }, [start, liveColor]);
+  }, [start, liveColor, interval]);
 
   return <canvas ref={canvasRef} width={size} height={size} className='bg-black' ></canvas>
 }

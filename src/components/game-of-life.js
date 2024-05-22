@@ -1,25 +1,21 @@
 'use client'
 import {useEffect, useState} from "react";
 import Canvas from "@/components/canvas";
-import NavBar from "@/components/nav-bar";
 import useThrottle from "@/lib/useThrottle";
-
-const defaultMapSize = 120, defaultGridSize = 20;
-const defaultAxisColor = '#555555', defaultLiveColor = '#476bd7';
-const defaultInterval = 200, defaultDensity = 0;
+import NavBar,
+{ defaultMapSize, defaultGridSize, defaultAxisColor, defaultLiveColor, defaultInterval, defaultDensity, getRandomArray}
+  from "@/components/nav-bar";
 
 // setGameMap is called when game is on in Canvas, but off in NavBar and this component.
 // whenever gameMap is updated during stop, prevMap should be updated together,
-// to help update the canvas more efficient.
+// to help update the canvas.
 export default function GameOfLife() {
   const [mapSize, setMapSize] = useState(defaultMapSize);
-  const [density, setDensity] = useState(defaultDensity);
-  const [prevMap, setPrevMap] = useState(initialArray(mapSize, 0));  // this map is only for stopped game help reduce canvas clear
-  const [gameMap, setGameMap] = useState(initialArray(mapSize, density));
+  const [prevMap, setPrevMap] = useState(getRandomArray(mapSize, 0));  // this map is only for stopped game help reduce canvas clear
+  const [gameMap, setGameMap] = useState(getRandomArray(mapSize, defaultDensity));
   const [start, setStart] = useState(false);
 
-  const initialRatio = typeof window !== "undefined"? window.devicePixelRatio:1
-  const [ratio,setRatio] = useState(initialRatio);
+  const [ratio,setRatio] = useState(typeof window !== "undefined"? window.devicePixelRatio:1);
   const [liveColor, setLiveColor] = useState(defaultLiveColor);
   const [axisColor, setAxisColor] = useState(defaultAxisColor);
   const [gridSize, setGridSize] = useState(defaultGridSize);
@@ -38,47 +34,57 @@ export default function GameOfLife() {
 
   function clickOnBoard(e) {
     if (start) { return; }
-    const gridSize = 20;                                                  // do check with canvas.js
     const x = (e.clientX-e.currentTarget.offsetLeft+e.currentTarget.scrollLeft)*ratio,
           y = (e.clientY-e.currentTarget.offsetTop+e.currentTarget.scrollTop)*ratio;
     const indX = Math.floor(x/gridSize);
     const indY = Math.floor(y/gridSize);
+    if (indY>gameMap.length||indX>gameMap[0].length) { return; }
+
     const newMap = deepCopy(gameMap);
     newMap[indY][indX] = newMap[indY][indX]===0? 1:0;
     setPrevAndTemp(newMap);
   }
 
-  function setPrevAndTemp(newMap) {
-    setPrevMap(deepCopy(gameMap));
-    setGameMap(newMap);
+  function setPrevAndTemp(newMap, onlyForPrev=false, newPrev=null) {
+    if (onlyForPrev){
+      setPrevMap(deepCopy(newMap));
+    }
+    else {
+      setPrevMap(newPrev||deepCopy(gameMap));
+      setGameMap(newMap);
+    }
   }
 
   return (
     <div>
       <div className='flex'>
-        <div className='w-52 h-screen bg-black'>
+        <div className='min-w-fit  max-w-md h-screen bg-black border-r-[1px] border-white pt-4 text-white resize-x overflow-auto'>
           <NavBar
-            start={start}
-            setStart={setStart}
-            setPrevAndTemp={setPrevAndTemp}
-            size={mapSize}
-            setRatio={setRatio}
-            liveColor={liveColor}
-            setLiveColor={setLiveColor}
+            gameMap = {gameMap}
+            start = {start}
+            setStart = {setStart}
+            setPrevAndTemp = {setPrevAndTemp}
+            mapSize = {mapSize}
+            setMapSize = {setMapSize}
+            setGridSize = {setGridSize}
+            setRatio = {setRatio}
+            setLiveColor = {setLiveColor}
+            setAxisColor = {setAxisColor}
+            setInterval = {setInterval}
           ></NavBar>
         </div>
 
         <div className='w-full h-screen overflow-scroll scrollbar' onClick={clickOnBoard}>
           <Canvas
-            gameMap={gameMap}
-            prevMap={prevMap}
-            setGameMap={setGameMap}
-            start={start}
-            ratio={ratio}
-            gridSize={gridSize}
-            interval={interval}
-            liveColor={liveColor}
-            axisColor={axisColor}
+            gameMap = {gameMap}
+            prevMap = {prevMap}
+            setGameMap = {setGameMap}
+            start = {start}
+            ratio = {ratio}
+            gridSize = {gridSize}
+            interval = {interval}
+            liveColor = {liveColor}
+            axisColor = {axisColor}
           ></Canvas>
         </div>
       </div>
@@ -86,6 +92,27 @@ export default function GameOfLife() {
   )
 }
 
+function star(dataMap, r, c) {         // width&height 13
+  if (r<0||c<0||r+12>dataMap.length-1||c+12>dataMap.length-1) {return ;}
+  const rows = [
+    {row:r+2, col:c, width:3},
+    {row:r+8, col:c, width:3},
+    {row:r+2, col:c+5, width:3},
+    {row:r+8, col:c+5, width:3},
+    {row:r+2, col:c+7, width:3},
+    {row:r+8, col:c+7, width:3},
+    {row:r+2, col:c+12, width:3},
+    {row:r+8, col:c+12, width:3},
+  ];
+  setSeveralRows(dataMap, rows);
+}
+
+
+function setSeveralRows(data, posList){
+  posList.map(posOb=>{
+    setRow(data,posOb.row, posOb.col, posOb.width)
+  })
+}
 function setRow(data, r, c, w, val=1) {
   for (let j=c;j<c+w;j++) {
     data[r][j] = val;
@@ -98,33 +125,6 @@ function setCol(data, r, c, h, val=1) {
   }
 }
 
-function initialArray(len, num=1) {
-  const data = new Array(len);
-  const initial = new Array(len).fill(0);
-  for (let i=0;i<len;i++){
-    data[i] = initial.map(val=>Math.random()<num?1:val);
-  }
-  return data;
+function deepCopy(dataMap) {
+  return dataMap.map(arr=>[...arr]);
 }
-
-function deepCopy(arr) {
-  return arr.map(a=>[...a]);
-}
-
-
-function queenBee(gameMap, left, top) {
-
-}
-/*
-  gameMap[20][20] = 1;
-  gameMap[20][21] = 1;
-  gameMap[21][21] = 1;
-  gameMap[22][21] = 1;
-  gameMap[21][19] = 1;
-      function handleSpacePressed(e){
-      if (e.key===' '){
-        e.preventDefault();
-        setStart(!start);
-      }
-    }
-*/

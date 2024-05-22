@@ -1,42 +1,52 @@
 import {useEffect, useRef} from "react";
 
+const lineWidth = 1;
 export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor}) {
-
+  const prevWidth = useRef(-1);
   useEffect(() => {
     const canvas = canvasRef.current;
-    const width = canvas.width;
-    const height = canvas.height;
+    const width = canvas.width, height = canvas.height;
     canvas.style.width = `${width/ratio}px`;
     canvas.style.height = `${height/ratio}px`;
   }, [ratio]);
 
   useEffect(()=> {
     const canvas = canvasRef.current;
-    const width = canvas.width;
-    const height = canvas.height;
     const ctx = canvasRef.current.getContext('2d');
+    const width = canvas.width, height = canvas.height;
+    if (prevWidth.current===-1) {(prevWidth.current=width)}
     drawAxis(ctx, width, height);
-  }, []);
+  }, [axisColor]);
 
+// it seems that the change of the width or height attribute of canvas will delete all painted pixels previously,
+// so drawAxis is called when size of gameMap changes
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d');
-    !start&&initData(ctx);
-  }, [gameMap]);
+    if (prevWidth.current!==canvasRef.current.width) {
+      const canvas = canvasRef.current;
+      const width = canvas.width, height = canvas.height;
+      canvas.style.width = `${width/ratio}px`;
+      canvas.style.height = `${height/ratio}px`;
+      drawAxis(ctx, width, height);
+      prevWidth.current = canvasRef.current.width;
+    }
+    initData(ctx);
+  }, [prevMap, gridSize]);
 
   function drawAxis(ctx, width, height) {
     ctx.save();
     ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 0.25;
+    ctx.lineWidth = lineWidth;
     for (let i=gridSize;i<width;i+=gridSize){
       ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(width, i);
+      ctx.moveTo(0, i-0.5);
+      ctx.lineTo(width, i-0.5);
       ctx.stroke();
     }
     for (let i=gridSize;i<width;i+=gridSize){
       ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, height);
+      ctx.moveTo(i-0.5, 0);
+      ctx.lineTo(i-0.5, height);
       ctx.stroke();
     }
     ctx.restore();
@@ -48,7 +58,7 @@ export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ra
     const h = gameMap.length, w = gameMap[0].length;
     for (let i=0;i<h;i++){
       for (let j=0;j<w;j++){
-        if (gameMap[i][j]!==prevMap[i][j]){
+        if (prevMap[i][j]!==void 0&&gameMap[i][j]!==prevMap[i][j]){
           gameMap[i][j]!==0?
             paintGrid(ctx, i, j, gridSize, w, h, false):
             paintGrid(ctx, i, j, gridSize, w, h, true);
@@ -61,104 +71,35 @@ export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ra
 
 
 export function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
-  const baseLength = gridSize-2;
+  const baseLength = gridSize-1;
+  const axisX = j*gridSize, axisY = i*gridSize
   switch (true){
-    case (i>0&&i<w-1&&j>0&&j<h-1):{
+    case (i<h-1&&j<w-1):{
       isClear?
-        ctx.clearRect(j*gridSize+1, i*gridSize+1, baseLength, baseLength):
-        ctx.fillRect (j*gridSize+1, i*gridSize+1, baseLength, baseLength);
-      break;
-    }
-    case (i===0&&j===0):{
-      isClear?
-        ctx.clearRect(j, i, baseLength+1, baseLength+1):
-        ctx.fillRect (j, i, baseLength+1, baseLength+1);
-      break;
-    }
-    case (i===0&&j===w-1):{
-      isClear?
-        ctx.clearRect(j*gridSize+1, i, baseLength+1, baseLength+1):
-        ctx.fillRect (j*gridSize+1, i, baseLength+1, baseLength+1);
-      break;
-    }
-    case (i===h-1&&j===0):{
-      isClear?
-        ctx.clearRect(j, i*gridSize+1, baseLength+1, baseLength+1):
-        ctx.fillRect (j, i*gridSize+1, baseLength+1, baseLength+1);
+        ctx.clearRect(axisX, axisY, baseLength, baseLength):
+        ctx.fillRect (axisX, axisY, baseLength, baseLength);
       break;
     }
     case (i===h-1&&j===w-1):{
       isClear?
-        ctx.clearRect(j*gridSize+1, i*gridSize+1, baseLength+1, baseLength+1):
-        ctx.fillRect (j*gridSize+1, i*gridSize+1, baseLength+1, baseLength+1);
+        ctx.clearRect(axisX, axisY, baseLength+1, baseLength+1):
+        ctx.fillRect (axisX, axisY, baseLength+1, baseLength+1);
       break;
     }
-    case (i===0||i===h-1):{
+    case (i===h-1):{
       isClear?
-        ctx.clearRect(j*gridSize+1,i===0?i:i*gridSize+1, baseLength, baseLength+1):
-        ctx.fillRect (j*gridSize+1,i===0?i:i*gridSize+1, baseLength, baseLength+1);
+        ctx.clearRect(axisX, axisY, baseLength, baseLength+1):
+        ctx.fillRect (axisX, axisY, baseLength, baseLength+1);
       break;
     }
-    case (j===0||j===w-1):{
+    case (j===w-1):{
       isClear?
-        ctx.clearRect(j===0?j:j*gridSize+1, i*gridSize+1, baseLength+1, baseLength):
-        ctx.fillRect (j===0?j:j*gridSize+1, i*gridSize+1, baseLength+1, baseLength);
+        ctx.clearRect(axisX, axisY, baseLength+1, baseLength):
+        ctx.fillRect (axisX, axisY, baseLength+1, baseLength);
       break;
     }
-    /*
-    default:{
-      isClear?
-        ctx.clearRect(j*gridSize+1, i*gridSize+1, baseLength, baseLength):
-        ctx.fillRect (j*gridSize+1, i*gridSize+1, baseLength, baseLength);
-    }
-
-     */
-  }
-}
-/*
-export function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
-  switch (true){
-    case (i===0&&j===0):{
-      isClear?
-        ctx.clearRect(j, i, gridSize-1, gridSize-1):
-        ctx.fillRect (j, i, gridSize-1, gridSize-1);
-      break;
-    }
-    case (i===0&&j===h-1):{
-      isClear?
-        ctx.clearRect(j*gridSize+1, i, gridSize-1, gridSize-1):
-        ctx.fillRect (j*gridSize+1, i, gridSize-1, gridSize-1);
-      break;
-    }
-    case (i===h-1&&j===0):{
-      isClear?
-        ctx.clearRect(j, i*gridSize+1, gridSize-1, gridSize-1):
-        ctx.fillRect (j, i*gridSize+1, gridSize-1, gridSize-1);
-      break;
-    }
-    case (i===h-1&&j===w-1):{
-      isClear?
-        ctx.clearRect(j*gridSize+1, i*gridSize+1, gridSize-1, gridSize-1):
-        ctx.fillRect (j*gridSize+1, i*gridSize+1, gridSize-1, gridSize-1);
-      break;
-    }
-    case (i===0||i===h-1):{
-      isClear?
-        ctx.clearRect(j*gridSize+1,i===0?i:i*gridSize+1, gridSize-2, gridSize-1):
-        ctx.fillRect (j*gridSize+1,i===0?i:i*gridSize+1, gridSize-2, gridSize-1);
-      break;
-    }
-    case (j===0||j===w-1):{
-      isClear?
-        ctx.clearRect(j===0?j:j*gridSize+1, i*gridSize+1, gridSize-1, gridSize-2):
-        ctx.fillRect (j===0?j:j*gridSize+1, i*gridSize+1, gridSize-1, gridSize-2);
-      break;
-    }
-    default:{
-      isClear?
-        ctx.clearRect(j*gridSize+1, i*gridSize+1, gridSize-2, gridSize-2):
-        ctx.fillRect (j*gridSize+1, i*gridSize+1, gridSize-2, gridSize-2);
+    default: {
+      console.error('Come back! Check your paint!');
     }
   }
 }
-*/

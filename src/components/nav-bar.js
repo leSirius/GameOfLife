@@ -2,68 +2,185 @@
 import {Button} from "@nextui-org/react";
 import {Input} from "@nextui-org/react";
 import {useState} from "react";
-
+import {list, map} from 'radash'
 // import { cva } from "class-variance-authority";
 // const button = cva('cursor-pointer w-2/3 my-3 outline-none ');
 
-export default function NavBar({start, setStart, setPrevAndTemp, size, setRatio, liveColor, setLiveColor}) {
-  const [scale, setScale] = useState('1');
-  const [inputColor, setInputColor] = useState(liveColor);
-  const minLimit = 0.1
+export const defaultMapSize = 50, defaultGridSize = 20,
+ defaultAxisColor = '#444444', defaultLiveColor = '#476bd7',
+ defaultInterval = 200, defaultDensity = 0;
+
+export default function NavBar(
+  {gameMap, start, setStart, setPrevAndTemp, mapSize, setMapSize, setGridSize, setRatio, setLiveColor, setAxisColor, setInterval}
+) {
+  // set both stop and running
+  const [scale, setScale] = useState(1);
+  const [inputLiveColor, setInputLiveColor] = useState(defaultLiveColor);
+  const [inputAxisColor, setInputAxisColor] = useState(defaultAxisColor);
+  // set only when stop
+  const [density, setDensity] = useState(defaultDensity);
+  const [inputMapSize, setInputMapSize] = useState(defaultMapSize);
+  const [inputGridSize, setInputGridSize] = useState(defaultGridSize);
+  const [inputInterval, setInputInterval] = useState(defaultInterval);
+  const minScale = 0.1;
+
+  const inputList = [
+    {
+      inputProps:{
+        type: 'color',
+        label: 'Axis Color',
+        labelPlacement: 'outside',
+        value: inputAxisColor,
+        onValueChange: setInputAxisColor,
+      },
+      buttonProps:{ onClick:()=>{setAxisColor(inputAxisColor)} }
+    }, {
+      inputProps:{
+        type: 'color',
+        label: 'Live Color',
+        labelPlacement: 'outside',
+        value: inputLiveColor,
+        onValueChange: setInputLiveColor,
+      },
+      buttonProps:{ onClick:()=>{setLiveColor(inputLiveColor)} }
+    }, {
+      inputProps:{
+        type: 'number',
+        description: `Range [${minScale},5], 1 to restore`,
+        label: 'Scale',
+        isInvalid: !validScale(),
+        errorMessage: `Please enter a number in [${minScale},5]`,
+        value: scale,
+        onValueChange: setScale,
+      },
+      buttonProps:{ onClick: handleRatio }
+    }, {
+      inputProps:{
+        type: 'number',
+        description: `Time interval between updates`,
+        label: 'Interval (ms)',
+        isInvalid: !validInterval(),
+        errorMessage: 'Please enter a proper number larger than 50',
+        value: inputInterval,
+        onValueChange: setInputInterval,
+      },
+      buttonProps:{ onClick: handleInterval }
+    }, {
+      inputProps:{
+        type: 'number',
+        description: `Integer number of grids in each row/col`,
+        label: 'MapSize',
+        isInvalid: !validMapSize(),
+        errorMessage: `Please enter an integer below 2000`,
+        value: inputMapSize,
+        onValueChange: setInputMapSize,
+        isDisabled: start,
+      },
+      buttonProps:{ onClick: handleMapSize }
+    }, {
+      inputProps:{
+        type: 'number',
+        description: `Range [.0, 1]`,
+        label: 'Density',
+        isInvalid: !validDensity(),
+        errorMessage: `Please enter a number in [.0, 1]`,
+        value: density,
+        onValueChange: setDensity,
+        isDisabled: start,
+      },
+      buttonProps:{ onClick: handleGenerate, children: 'Random' }
+    }, {
+      inputProps:{
+        type: 'number',
+        description: `Size of grid, Integer`,
+        label: 'GridSize',
+        isInvalid: !validGridSize(),
+        errorMessage: 'Please enter a proper number in [1,200]',
+        value: inputGridSize,
+        onValueChange: setInputGridSize,
+        isDisabled: start,
+      },
+      buttonProps:{ onClick: handleGridSize }
+    },
+  ]
+
+  return (
+    <div className='w-full h-full '>
+      <div className='flex flex-col gap-2 text-center w-10/12 mx-auto  '>
+        {inputList.map(ob=> <InputStyled
+          key = {`${ob.inputProps.label}`}
+          inputProps = {ob.inputProps}
+          buttonProps = {ob.buttonProps}
+        ></InputStyled>)}
+        <ButtonStyled onClick={()=>{setStart(!start)}}>{start?'Pause':'Start'}</ButtonStyled>
+        <ButtonStyled onClick={handleClean}>Clean</ButtonStyled>
+      </div>
+    </div>
+  )
 
   function validScale() {
-    return scale===''||(scale>=minLimit&&scale<=5);
-  }
-
-  function handleRatio() {
     const numScale = Number(scale);
+    return scale===''||(numScale>=minScale&&numScale<=5);
+  }
+  function handleRatio() {
     if (validScale()&&scale!==''){
+      const numScale = Number(scale);
       const newRatio = (window?.devicePixelRatio || 1)/numScale;
       setRatio(newRatio);
     }
   }
 
-  function handleRandom() {
-    setStart(false);
-    setPrevAndTemp(initialArray(size, 0.15));
+  function validDensity() {
+    const numDensity = Number(density);
+    return density===''||(numDensity>=0&&numDensity<=1);
+  }
+  function handleGenerate() {
+    if (validDensity()&&density!=='') {
+      const numDensity = Number(density);
+      setPrevAndTemp(getRandomArray(mapSize, numDensity))
+    }
+  }
+
+  function validMapSize() {
+    const numMapSize = Number(inputMapSize);
+    return inputMapSize===''||(Number.isInteger(numMapSize)&&numMapSize>0&&numMapSize<2001);
+  }
+  function handleMapSize() {
+    if (Number(inputMapSize)===mapSize) { return; }
+    if (validMapSize()&&inputMapSize!==''){
+      const numMapSize = Number(inputMapSize);
+      setMapSize(numMapSize);
+      const data = scaleMap(gameMap, numMapSize);
+      setPrevAndTemp(data, false, getRandomArray(numMapSize, 0));
+    }
+  }
+
+  function validGridSize() {
+    const numGridSize = Number(inputGridSize);
+    return inputGridSize===''||(Number.isInteger(numGridSize)&&numGridSize>=1&&numGridSize<=200);
+  }
+  function handleGridSize() {
+    if (validGridSize()&&inputGridSize!==''){
+      const numGridSize = Number(inputGridSize);
+      setPrevAndTemp(getRandomArray(mapSize, 0), true);
+      setGridSize(numGridSize);
+    }
+  }
+
+  function validInterval() {
+    const numInterval = Number(inputInterval);
+    return inputInterval===''||(Number.isInteger(numInterval)&&numInterval>=50)
+  }
+  function handleInterval() {
+    if (validInterval()&&inputInterval!=='') {
+      setInterval(inputInterval);
+    }
   }
 
   function handleClean() {
     setStart(false);
-    setPrevAndTemp(initialArray(size, 0))
+    setPrevAndTemp(getRandomArray(mapSize, 0));
   }
-
-  return (
-    <div className='w-full h-full border-r-[1px] border-white pt-40 text-white'>
-      <div className='flex flex-col gap-4 text-center w-10/12 mx-auto  '>
-        <InputStyled
-          inputProps={{
-            type: 'color',
-            value: inputColor,
-            onValueChange: setInputColor,
-          }}
-          buttonProps={{ onClick:()=>{setLiveColor(inputColor)} }}
-        >
-        </InputStyled>
-        <InputStyled
-          inputProps={{
-            type: 'number',
-            description: `Range [${minLimit},5], 1 to restore`,
-            label: 'Scale',
-            isInvalid: !validScale(),
-            errorMessage: `Please enter a number in [${minLimit},5]`,
-            value: scale,
-            onValueChange: setScale,
-          }}
-          buttonProps={{onClick: handleRatio}}
-        >
-        </InputStyled>
-        <ButtonStyled onClick={()=>{setStart(!start)}}>{start?'Pause':'Start'}</ButtonStyled>
-        <ButtonStyled onClick={handleRandom}>Random</ButtonStyled>
-        <ButtonStyled onClick={handleClean}>Clean</ButtonStyled>
-      </div>
-    </div>
-  )
 }
 
 function ButtonStyled(props) {
@@ -79,22 +196,32 @@ function InputStyled({inputProps, buttonProps}) {
       variant='faded'
       radius='lg'
       size='sm'
-      onKeyUp={ (e)=>{e.key==='Enter'&&buttonProps.onClick();}}
-      endContent={
-        <Button size='sm' color='default' {...buttonProps}>Set</Button>
-      }
+      onKeyUp={ (e)=>{e.key==='Enter'&&buttonProps.onClick();} }
+      endContent={ <Button size='sm' color='default' {...buttonProps}>{buttonProps.children? buttonProps.children:'Set'}</Button>}
       {...inputProps}
     ></Input>
   )
 }
 
-
-export function initialArray(len, num=1) {
+export function getRandomArray(len, den=0) {
+  len = Number(len);
   const data = new Array(len);
   const initial = new Array(len).fill(0);
-  for (let i=0;i<len;i++){
-    data[i] = initial.map(val=>Math.random()<num?1:val);
+  for (let i=0;i<len;i++) {
+    data[i] = initial.map(val=>Math.random()<den?1:val);
   }
   return data;
 }
 
+function scaleMap(gameMap, len) {
+  let data;
+  if (gameMap.length>len) {
+    data = gameMap.slice(0,len).map(arr=>arr.slice(0,len));
+  }
+  else {
+    data = gameMap.map(arr=>arr.concat(list(0,len-gameMap.length-1, 0)))
+                  .concat(list(0, len-gameMap.length-1,
+                    ()=>list(0,len-1,0)));
+  }
+  return data;
+}
