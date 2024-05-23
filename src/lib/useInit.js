@@ -1,14 +1,19 @@
 import {useEffect, useRef} from "react";
+import {paintGrid} from "@/lib/sharedFuncs";
 
 const lineWidth = 1;
 export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor}) {
   const prevWidth = useRef(-1);
+
+  /*
   useEffect(() => {
     const canvas = canvasRef.current;
     const width = canvas.width, height = canvas.height;
     canvas.style.width = `${width/ratio}px`;
     canvas.style.height = `${height/ratio}px`;
+    console.log(canvas.style.width)
   }, [ratio]);
+   */
 
   useEffect(()=> {
     const canvas = canvasRef.current;
@@ -20,6 +25,7 @@ export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ra
 
 // it seems that the change of the width or height attribute of canvas will delete all painted pixels previously,
 // so drawAxis is called when size of gameMap changes
+
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d');
     if (prevWidth.current!==canvasRef.current.width) {
@@ -69,37 +75,3 @@ export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ra
   }
 }
 
-
-export function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
-  const baseLength = gridSize-1;
-  const axisX = j*gridSize, axisY = i*gridSize
-  switch (true){
-    case (i<h-1&&j<w-1):{
-      isClear?
-        ctx.clearRect(axisX, axisY, baseLength, baseLength):
-        ctx.fillRect (axisX, axisY, baseLength, baseLength);
-      break;
-    }
-    case (i===h-1&&j===w-1):{
-      isClear?
-        ctx.clearRect(axisX, axisY, baseLength+1, baseLength+1):
-        ctx.fillRect (axisX, axisY, baseLength+1, baseLength+1);
-      break;
-    }
-    case (i===h-1):{
-      isClear?
-        ctx.clearRect(axisX, axisY, baseLength, baseLength+1):
-        ctx.fillRect (axisX, axisY, baseLength, baseLength+1);
-      break;
-    }
-    case (j===w-1):{
-      isClear?
-        ctx.clearRect(axisX, axisY, baseLength+1, baseLength):
-        ctx.fillRect (axisX, axisY, baseLength+1, baseLength);
-      break;
-    }
-    default: {
-      console.error('Come back! Check your paint!');
-    }
-  }
-}

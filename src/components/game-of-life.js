@@ -1,18 +1,34 @@
 'use client'
+
 import {useEffect, useState} from "react";
 import Canvas from "@/components/canvas";
 import useThrottle from "@/lib/useThrottle";
+import {getRandomArray} from "@/lib/sharedFuncs";
 import NavBar,
-{ defaultMapSize, defaultGridSize, defaultAxisColor, defaultLiveColor, defaultInterval, defaultDensity, getRandomArray}
+{ defaultMapSize, defaultGridSize, defaultAxisColor, defaultLiveColor, defaultInterval, defaultDensity}
   from "@/components/nav-bar";
+import {pulsar} from "@/lib/models";
+
+// ratio relies on browser environment, which might cause mismatch between client and server render.
+// dynamic render to disable ssr.
+// though not an error, it will cause a warning and resize of canvas on screen, as canvas was initially
+// rendered according to the state of server.
+
+import dynamic from 'next/dynamic'
+export default  dynamic(() => Promise.resolve(GameOfLife), {
+  ssr:false
+})
+
+
 
 // setGameMap is called when game is on in Canvas, but off in NavBar and this component.
 // whenever gameMap is updated during stop, prevMap should be updated together,
 // to help update the canvas.
-export default function GameOfLife() {
+function GameOfLife() {
+  const notable = '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!';
   const [mapSize, setMapSize] = useState(defaultMapSize);
-  const [prevMap, setPrevMap] = useState(getRandomArray(mapSize, 0));  // this map is only for stopped game help reduce canvas clear
   const [gameMap, setGameMap] = useState(getRandomArray(mapSize, defaultDensity));
+  const [prevMap, setPrevMap] = useState(getRandomArray(mapSize, 0));  // this map is only for stopped game help reduce canvas clear
   const [start, setStart] = useState(false);
 
   const [ratio,setRatio] = useState(typeof window !== "undefined"? window.devicePixelRatio:1);
@@ -20,10 +36,11 @@ export default function GameOfLife() {
   const [axisColor, setAxisColor] = useState(defaultAxisColor);
   const [gridSize, setGridSize] = useState(defaultGridSize);
   const [interval, setInterval] = useState(defaultInterval);
-
   const handleSpacePressed = useThrottle((e)=> {
     if (e.key===' ') { setStart(!start); }
   }, true, 400);
+
+  //console.log(mapSize, start, ratio, liveColor, axisColor, gridSize, interval, gameMap, prevMap);
 
   useEffect(() => {
     document.addEventListener('keydown', handleSpacePressed);
@@ -55,6 +72,10 @@ export default function GameOfLife() {
     }
   }
 
+  if (gridSize===24) {
+    console.log(gameMap);
+  }
+
   return (
     <div>
       <div className='flex'>
@@ -74,7 +95,7 @@ export default function GameOfLife() {
           ></NavBar>
         </div>
 
-        <div className='w-full h-screen overflow-scroll scrollbar' onClick={clickOnBoard}>
+        <div className=' w-screen h-screen overflow-scroll scrollbar' onClick={clickOnBoard}>
           <Canvas
             gameMap = {gameMap}
             prevMap = {prevMap}

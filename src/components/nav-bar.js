@@ -2,7 +2,9 @@
 import {Button} from "@nextui-org/react";
 import {Input} from "@nextui-org/react";
 import {useState} from "react";
-import {list, map} from 'radash'
+import {list} from 'radash'
+import {getRandomArray} from "@/lib/sharedFuncs";
+
 // import { cva } from "class-variance-authority";
 // const button = cva('cursor-pointer w-2/3 my-3 outline-none ');
 
@@ -203,15 +205,7 @@ function InputStyled({inputProps, buttonProps}) {
   )
 }
 
-export function getRandomArray(len, den=0) {
-  len = Number(len);
-  const data = new Array(len);
-  const initial = new Array(len).fill(0);
-  for (let i=0;i<len;i++) {
-    data[i] = initial.map(val=>Math.random()<den?1:val);
-  }
-  return data;
-}
+
 
 function scaleMap(gameMap, len) {
   let data;
