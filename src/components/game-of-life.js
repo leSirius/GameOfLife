@@ -19,13 +19,10 @@ export default  dynamic(() => Promise.resolve(GameOfLife), {
   ssr:false
 })
 
-
-
 // setGameMap is called when game is on in Canvas, but off in NavBar and this component.
 // whenever gameMap is updated during stop, prevMap should be updated together,
 // to help update the canvas.
 function GameOfLife() {
-  const notable = '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!';
   const [mapSize, setMapSize] = useState(defaultMapSize);
   const [gameMap, setGameMap] = useState(getRandomArray(mapSize, defaultDensity));
   const [prevMap, setPrevMap] = useState(getRandomArray(mapSize, 0));  // this map is only for stopped game help reduce canvas clear
