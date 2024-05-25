@@ -48,7 +48,7 @@ export default function NavBar(
     }, {
       inputProps:{
         type: 'number',
-        description: `Range [${minScale},5], 1 to restore`,
+        title: `Range [${minScale},5], 1 to restore`,
         label: 'Scale',
         isInvalid: !validScale(),
         errorMessage: `Please enter a number in [${minScale},5]`,
@@ -59,7 +59,7 @@ export default function NavBar(
     }, {
       inputProps:{
         type: 'number',
-        description: `Time interval between updates`,
+        title: `Time interval between updates`,
         label: 'Interval (ms)',
         isInvalid: !validInterval(),
         errorMessage: 'Please enter a proper number larger than 50',
@@ -70,7 +70,7 @@ export default function NavBar(
     }, {
       inputProps:{
         type: 'number',
-        description: `Integer number of grids in each row/col`,
+        title: `Number of grids each row/col`,
         label: 'MapSize',
         isInvalid: !validMapSize(),
         errorMessage: `Please enter an integer below 2000`,
@@ -82,7 +82,7 @@ export default function NavBar(
     }, {
       inputProps:{
         type: 'number',
-        description: `Range [.0, 1]`,
+        title: `Range [.0, 1]`,
         label: 'Density',
         isInvalid: !validDensity(),
         errorMessage: `Please enter a number in [.0, 1]`,
@@ -94,7 +94,7 @@ export default function NavBar(
     }, {
       inputProps:{
         type: 'number',
-        description: `Size of grid, Integer`,
+        title: `Size of grid, Integer`,
         label: 'GridSize',
         isInvalid: !validGridSize(),
         errorMessage: 'Please enter a proper number in [1,200]',
