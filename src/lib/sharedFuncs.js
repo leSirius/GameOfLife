@@ -4,7 +4,7 @@ export function getRandomArray(len, den=0) {
   const data = new Array(len);
   const initial = new Array(len).fill(0);
   for (let i=0;i<len;i++) {
-    data[i] = initial.map(val=>Math.random()<den?1:val);
+    data[i] = initial.map(val=> Math.random()<den?1:val);
   }
   return data;
 }
@@ -41,4 +41,8 @@ export function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
       console.error('Come back! Check your paint!');
     }
   }
+}
+
+export function deepCopy(dataMap) {
+  return dataMap.map(arr => [...arr]);
 }

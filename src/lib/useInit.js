@@ -5,16 +5,6 @@ const lineWidth = 1;
 export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor}) {
   const prevWidth = useRef(-1);
 
-  /*
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const width = canvas.width, height = canvas.height;
-    canvas.style.width = `${width/ratio}px`;
-    canvas.style.height = `${height/ratio}px`;
-    console.log(canvas.style.width)
-  }, [ratio]);
-   */
-
   useEffect(()=> {
     const canvas = canvasRef.current;
     const ctx = canvasRef.current.getContext('2d');
@@ -75,3 +65,12 @@ export default function useInit(canvasRef, start, gameMap, prevMap, gridSize, ra
   }
 }
 
+/*
+useEffect(() => {
+  const canvas = canvasRef.current;
+  const width = canvas.width, height = canvas.height;
+  canvas.style.width = `${width/ratio}px`;
+  canvas.style.height = `${height/ratio}px`;
+  console.log(canvas.style.width)
+}, [ratio]);
+ */

@@ -1,67 +1,90 @@
 import {useEffect, useRef} from "react";
-import {paintGrid} from "@/lib/sharedFuncs";
+import {deepCopy, paintGrid} from "@/lib/sharedFuncs";
+
+// do not set state in requestAnimationFrame function, costly.
 
 export default function useUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize) {
   const animateId = useRef(0);
   const lastColor = useRef(liveColor);
+  const updatedMap = useRef(deepCopy(gameMap));
+  const lastState = useRef(start);
 
   useEffect(() => {
+    if (lastState.current && !start) { setGameMap(deepCopy(updatedMap.current)); }
+    if (!lastState.current && start) { updatedMap.current = deepCopy(gameMap); }
+    lastState.current = start;
+
     const ctx = canvasRef.current.getContext('2d');
+    let lastUpdate;
     if (start) {
-      animateId.current = requestAnimationFrame((current)=>{update(current, ctx, gameMap, gridSize)});
+      animateId.current = requestAnimationFrame(
+        (current)=> { update(current, ctx, updatedMap.current, gridSize); }
+      );
     }
 
-    let lastUpdate;
     function update(current, ctx, tempMap, gridSize) {
       lastUpdate = lastUpdate||current;
       let newMap;
       if (current-lastUpdate>interval) {
         lastUpdate = current;
         newMap = merge(ctx, tempMap, gridSize, liveColor, lastColor);
-        setGameMap(newMap);
+        updatedMap.current = deepCopy(newMap);
       }
-      animateId.current = requestAnimationFrame((current)=>{update(current, ctx, newMap||tempMap, gridSize)});
+      animateId.current = requestAnimationFrame(
+        (current)=>{ update(current, ctx, newMap||tempMap, gridSize); }
+      );
     }
-    return ()=>{ cancelAnimationFrame(animateId.current); }
+    return ()=> {
+      cancelAnimationFrame(animateId.current);
+    }
   }, [start, liveColor, interval]);
 
 }
+/*
 function merge(ctx, tempMap, gridSize, liveColor, lastColor){
-  let hasDif = false;
+  ctx.save();
+  ctx.fillStyle = liveColor;
+  //let hasDif = false;
   const size = tempMap.length;
   const data = emptyArray(size);
-  for (let i=0;i<size;i++) {
-    for (let j=0;j<size;j++) {
+  for (let i=0; i<size; i++) {
+    for (let j=0; j<size; j++) {
       if (tempMap[i][j]!==0) {
         setDataAround(data, i, j);
       }
+      if (i>0 && j>0){
+        calAndPaint(ctx, i-1, j-1, data, tempMap, gridSize,  lastColor, liveColor);
+      }
     }
+  }
+  for (let i=0; i<size; i++){
+    calAndPaint(ctx, i, size-1, data, tempMap, gridSize,  lastColor, liveColor);
+  }
+  for (let j=0; j<size-1; j++){
+    calAndPaint(ctx, size-1, j, data, tempMap, gridSize,  lastColor, liveColor);
   }
 
-  ctx.save();
-  ctx.fillStyle = liveColor;
-  for (let i=0;i<size;i++) {
-    for (let j=0;j<size;j++) {
-      data[i][j] = getRules(data[i][j], tempMap[i][j]);
-      if (data[i][j]!==tempMap[i][j]) {
-        data[i][j]===0?
-          paintGrid(ctx, i, j, gridSize, size, size, true):
-          paintGrid(ctx, i, j, gridSize, size, size, false);
-        hasDif = true;
-      }
-      else if(data[i][j]!==0&&lastColor.current!==liveColor){
-        paintGrid(ctx, i, j, gridSize, size, size, false);
-      }
-    }
-  }
   ctx.restore();
   lastColor.current = liveColor;
-  if (!hasDif){
-    const pressSpace = new KeyboardEvent('keydown', {key:' '});
-    document.dispatchEvent(pressSpace);
-  }
   return data;
 }
+
+function calAndPaint(ctx, r, c, data, tempMap, gridSize,  lastColor, liveColor) {
+  const size = tempMap.length;
+  data[r][c] = getRules(data[r][c], tempMap[r][c]);
+  if (data[r][c]!==tempMap[r][c]) {
+    data[r][c]===0?
+      paintGrid(ctx, r, c, gridSize, size, size, true):
+      paintGrid(ctx, r, c, gridSize, size, size, false);
+  }
+  else if(data[r][c]!==0 && lastColor.current!==liveColor){
+    console.log('got it')
+    paintGrid(ctx, r, c, gridSize, size, size, false);
+  }
+}
+
+ */
+
 
 // 1. Any live cell with fewer than two live neighbors dies, as if by underpopulation. numOfNeigh<2, prevState!=0 => 0
 // 2. Any live cell with two or three live neighbors lives on to the next generation.   2<=numOfNeigh<=3, prevState!=0 => 1
@@ -124,3 +147,55 @@ function emptyArray(len) {
   }
   return data;
 }
+
+
+function merge(ctx, tempMap, gridSize, liveColor, lastColor){
+  let hasDif = false;
+  const size = tempMap.length;
+  const data = emptyArray(size);
+  for (let i=0;i<size;i++) {
+    for (let j=0;j<size;j++) {
+      if (tempMap[i][j]!==0) {
+        setDataAround(data, i, j);
+      }
+    }
+  }
+
+  ctx.save();
+  ctx.fillStyle = liveColor;
+  for (let i=0;i<size;i++) {
+    for (let j=0;j<size;j++) {
+      data[i][j] = getRules(data[i][j], tempMap[i][j]);
+      if (data[i][j]!==tempMap[i][j]) {
+        data[i][j]===0?
+          paintGrid(ctx, i, j, gridSize, size, size, true):
+          paintGrid(ctx, i, j, gridSize, size, size, false);
+        hasDif = true;
+      }
+      else if(data[i][j]!==0&&lastColor.current!==liveColor){
+        paintGrid(ctx, i, j, gridSize, size, size, false);
+      }
+    }
+  }
+  ctx.restore();
+  lastColor.current = liveColor;
+  if (!hasDif){
+    const pressSpace = new KeyboardEvent('keydown', {key:' '});
+    document.dispatchEvent(pressSpace);
+  }
+  return data;
+}
+/*
+
+        const [r,c] = [i-1,j-1]
+        data[r][c] = getRules(data[r][c], tempMap[r][c]);
+        if (data[r][c]!==tempMap[r][c]) {
+          data[r][c]===0?
+            paintGrid(ctx, r, c, gridSize, size, size, true):
+            paintGrid(ctx, r, c, gridSize, size, size, false);
+          hasDif = true;
+        }
+        else if(data[r][c]!==0 && lastColor.current!==liveColor){
+          paintGrid(ctx, r, c, gridSize, size, size, false);
+        }
+ */

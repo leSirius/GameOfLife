@@ -1,13 +1,13 @@
 'use client'
-
 import {useRef} from "react";
 import useInit from "@/lib/useInit";
 import useUpdate from "@/lib/useUpdate";
 
+
 export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, gridSize, interval, liveColor, axisColor}) {
   const canvasRef = useRef(null);
-
   const size = gameMap.length*gridSize;
+
   useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor});
   useUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
 
@@ -20,12 +20,8 @@ export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, grid
         style={{width:`${(size/ratio).toFixed(2)}px`,height:`${(size/ratio).toFixed(2)}px`}}
       >
       </canvas>
-
     )
-
 }
-
-// merge calMapState and rePaint to save one iteration.
 
 /*
 function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
@@ -116,3 +112,5 @@ function rePaintMap(ctx, newMap, tempMap, gridSize) {
   ctx.restore();
 }
  */
+
+
