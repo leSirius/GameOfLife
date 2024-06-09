@@ -1,15 +1,14 @@
-import GameOfLifeNoSSR from "@/components/game-of-life";
+// import GameOfLifeNoSSR from "@/components/game-of-life";
 import {Providers} from "@/app/providers";
 
-//import GameOfLife from "@/components/game-of-life";
-/*
 import dynamic from 'next/dynamic'
-const DynamicHeader = dynamic(() => import('@/components/game-of-life')
+const GameOfLifeNoSSR = dynamic(() => import('@/components/game-of-life')
 , {
-  ssr:true,
-})
-*/
+  ssr:false,
+});
+
 export default function Home() {
+
   return (
     <main>
       <Providers>

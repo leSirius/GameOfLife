@@ -37,12 +37,10 @@ export function paintGrid(ctx, i, j, gridSize, w, h, isClear=false) {
         ctx.fillRect (axisX, axisY, baseLength+1, baseLength);
       break;
     }
-    default: {
-      console.error('Come back! Check your paint!');
-    }
   }
 }
 
 export function deepCopy(dataMap) {
+  //return JSON.parse(JSON.stringify(dataMap))
   return dataMap.map(arr => [...arr]);
 }

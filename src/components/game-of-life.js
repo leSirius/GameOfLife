@@ -11,16 +11,18 @@ import {gosper} from "@/lib/models";
 // though not an error, it will cause a warning and resize of canvas on screen, as canvas was initially
 // rendered according to the state of server.
 // It seems that in most cases, the pages are rendered in the server, even though the component is a client one.
-
+/*
 import dynamic from 'next/dynamic'
 export default dynamic(() => Promise.resolve(GameOfLife),
-  { ssr:false }
+  { ssr: false }
 );
+ */
 
+// #########################################################
 // setGameMap is called when game is on in Canvas, but off in NavBar and this component.
 // whenever gameMap is updated during stop, prevMap should be updated together,
 // to help update the canvas.
-function GameOfLife() {
+export default function GameOfLife() {
   const [gameMap, setGameMap] = useState(gosper);  //getRandomArray(defaultMapSize, defaultDensity));
   const [prevMap, setPrevMap] = useState(getRandomArray(gosper.length, 0));  //defaultMapSize, 0));  // this map is only for stopped game help reduce canvas clear
   const [start, setStart] = useState(false);
