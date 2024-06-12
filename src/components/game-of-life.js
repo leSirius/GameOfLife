@@ -14,15 +14,21 @@ import {gosper} from "@/lib/models";
 /*
 import dynamic from 'next/dynamic'
 export default dynamic(() => Promise.resolve(GameOfLife),
-  { ssr: false }
+  { ssr: true }
 );
+
  */
 
-// #########################################################
+
+
+// wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 // setGameMap is called when game is on in Canvas, but off in NavBar and this component.
 // whenever gameMap is updated during stop, prevMap should be updated together,
 // to help update the canvas.
-export default function GameOfLife() {
+
+export  default
+function GameOfLife() {
+
   const [gameMap, setGameMap] = useState(gosper);  //getRandomArray(defaultMapSize, defaultDensity));
   const [prevMap, setPrevMap] = useState(getRandomArray(gosper.length, 0));  //defaultMapSize, 0));  // this map is only for stopped game help reduce canvas clear
   const [start, setStart] = useState(false);
@@ -35,7 +41,6 @@ export default function GameOfLife() {
   const handleSpacePressed = useThrottle((e)=> {
     if (e.key===' ') { setStart(!start); }
   }, true, 400);
-
   useEffect(() => {
     document.addEventListener('keydown', handleSpacePressed);
     return ()=> {
@@ -45,7 +50,7 @@ export default function GameOfLife() {
 
   return (
     <>
-      <div className='min-w-fit  max-w-md h-screen bg-black border-r-[1px] border-white pt-4 text-white resize-x overflow-auto'>
+      <div className='min-w-fit max-w-md h-screen bg-black border-r-[1px] border-white pt-4 text-white resize-x overflow-auto'>
         <NavBar
           gameMap = {gameMap}
           start = {start}

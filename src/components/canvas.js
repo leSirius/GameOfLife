@@ -2,6 +2,7 @@
 import {useRef} from "react";
 import useInit from "@/lib/useInit";
 import useUpdate from "@/lib/useUpdate";
+import useWorkerUpdate from "@/lib/useWorkerUpdate";
 
 export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, gridSize, interval, liveColor, axisColor}) {
   const canvasRef = useRef(null);
@@ -9,6 +10,7 @@ export default function Canvas({gameMap, prevMap, start, setGameMap, ratio, grid
 
   useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor});
   useUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
+  // useWorkerUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
   return(
       <canvas
         ref={canvasRef}

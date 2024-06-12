@@ -37,11 +37,12 @@ export default function useWorkerUpdate(canvasRef, start, gameMap, setGameMap, l
         worker.sendData(part2);
         worker.receiveData((e)=>{
           handleResult(ctx, e.data, tempMap, cutLine, gridSize,  lastColor, liveColor, newMap);
+          updatedMap.current = deepCopy(newMap);
         });
 
         handleResult(ctx, calMatrix(part1), tempMap, 0, gridSize,  lastColor, liveColor, newMap);
 
-        updatedMap.current = deepCopy(newMap);
+
       }
       animateId.current = requestAnimationFrame(
         (current)=>{ updateWorker(current, ctx, newMap||tempMap, gridSize); }
