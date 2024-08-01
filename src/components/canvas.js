@@ -2,7 +2,7 @@
 import {useRef} from "react";
 import useInit from "@/lib/useInit";
 import useUpdate from "@/lib/useUpdate";
-import useWorkerUpdate from "@/lib/useWorkerUpdate";
+// import useWorkerUpdate from "@/lib/useWorkerUpdate";
 
 
 import dynamic from 'next/dynamic'
@@ -18,8 +18,8 @@ function  Canvas({gameMap, prevMap, start, setGameMap, ratio, gridSize, interval
   const size = gameMap.length*gridSize;
 
   useInit(canvasRef, start, gameMap, prevMap, gridSize, ratio, {axisColor, liveColor});
-  // useUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
-  useWorkerUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
+  useUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
+  // useWorkerUpdate(canvasRef, start, gameMap, setGameMap, liveColor, interval, gridSize);
   return(
       <canvas
         ref={canvasRef}

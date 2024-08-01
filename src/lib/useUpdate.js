@@ -17,15 +17,19 @@ export default function useUpdate(canvasRef, start, gameMap, setGameMap, liveCol
     ctx.fillStyle = liveColor;
     let lastUpdate;
 
+
     if (start) {
+      /*
       const liveList = [];
       for (let i=0;i<updatedMap.current.length;i++) {
         for (let j=0;j<updatedMap.current[0].length;j++) {
           if (updatedMap.current[i][j]!==0) {liveList.push([i,j])}
         }
       }
+
+       */
       animateId.current = requestAnimationFrame(
-        (current)=> { update(current, ctx, updatedMap.current, gridSize, liveList); }
+        (current)=> { update(current, ctx, updatedMap.current, gridSize) } //, liveList); }
       );
     }
 
@@ -33,13 +37,15 @@ export default function useUpdate(canvasRef, start, gameMap, setGameMap, liveCol
       lastUpdate = lastUpdate||current;
       let newMap;
       if (current-lastUpdate>interval) {
+
         lastUpdate = current;
-        [newMap, liveList] = calPaintMap(ctx, tempMap, gridSize, liveColor, lastColor, liveList);
+        //  [newMap, liveList] = calPaintMap(ctx, tempMap, gridSize, liveColor, lastColor, liveList);
+        newMap = merge(ctx, tempMap, gridSize, liveColor, lastColor)
         updatedMap.current = newMap;
-        //new Promise(resolve => {}).then(()=>{updatedMap.current = deepCopy(newMap)})
+
       }
       animateId.current = requestAnimationFrame(
-        (current)=>{ update(current, ctx, newMap||tempMap, gridSize, liveList); }
+        (current)=>{ update(current, ctx, newMap||tempMap, gridSize);} //, liveList); }
       );
     }
 
@@ -49,7 +55,7 @@ export default function useUpdate(canvasRef, start, gameMap, setGameMap, liveCol
     }
   }, [start, liveColor, interval]);
 }
-
+/*
 function calPaintMap(ctx, tempMap, gridSize, liveColor, lastColor, liveList){
   // console.time('calculation')
   let hasDif = false;
@@ -61,12 +67,11 @@ function calPaintMap(ctx, tempMap, gridSize, liveColor, lastColor, liveList){
   for (let i=0;i<liveList.length;i++) {
     setNeighbourAround(hasNeighbour, liveList[i][0], liveList[i][1], tempMap.length);
   }
-  // console.timeEnd('calculation')
-  // console.time('paint')
+
   for (const [k,v] of hasNeighbour) {
     if (2<=v && v<=3) {
       const [i,j] = deKey(k);
-      data[i][j] = getRules(v,tempMap[i][j]);
+      data[i][j] = getRules(v, tempMap[i][j]);
       if (data[i][j]!==0) {newLiveList.push([i,j]);}
       if (data[i][j]!==tempMap[i][j]) {
         data[i][j]===0?
@@ -94,7 +99,7 @@ function calPaintMap(ctx, tempMap, gridSize, liveColor, lastColor, liveList){
   //console.timeEnd('paint')
   return [data, newLiveList];
 }
-
+*/
 // 1. Any live cell with fewer than two live neighbors dies, as if by underpopulation. numOfNeigh<2, prevState!=0 => 0
 // 2. Any live cell with two or three live neighbors lives on to the next generation.   2<=numOfNeigh<=3, prevState!=0 => 1
 // 3. Any live cell with more than three live neighbors dies, as if by overpopulation.  numOfNeigh>3, prevState!=0 => 0
@@ -140,7 +145,7 @@ function emptyArray(len) {
   return new Array(len).fill(0).map(() => new Array(len).fill(0));
 }
 
-/*
+
 function setDataAround(data, r, c, val=1) {
   for (let i=r-1;i<=r+1;i++) {
     for (let j=c-1;j<=c+1;j++) {
@@ -156,6 +161,34 @@ function merge(ctx, tempMap, gridSize, liveColor, lastColor){
   //let hasDif = false;
   const size = tempMap.length;
   const data = emptyArray(size);
+
+
+  /*
+  let hasDif = false;
+  for (let i=0;i<size;i++) {
+    for (let j=0;j<size;j++) {
+      if (tempMap[i][j]!==0) {
+        setDataAround(data, i, j);
+      }
+    }
+  }
+
+  for (let i=0;i<size;i++) {
+    for (let j=0;j<size;j++) {
+      data[i][j] = getRules(data[i][j], tempMap[i][j]);
+      if (data[i][j]!==tempMap[i][j]) {
+        data[i][j]===0?
+          paintGrid(ctx, i, j, gridSize, size, size, true):
+          paintGrid(ctx, i, j, gridSize, size, size, false);
+        hasDif = true;
+      }
+      else if(data[i][j]!==0&&lastColor.current!==liveColor){
+        paintGrid(ctx, i, j, gridSize, size, size, false);
+      }
+    }
+  }
+  */
+
   for (let i=0; i<size; i++) {
     for (let j=0; j<size; j++) {
       if (tempMap[i][j]!==0) {
@@ -192,7 +225,7 @@ function calAndPaint(ctx, r, c, data, tempMap, gridSize,  lastColor, liveColor) 
   }
 }
 
-
+/*
 function getRules2(numOfNeigh, prevState) {
   switch (true) {
     case (numOfNeigh<2):{
@@ -238,7 +271,7 @@ function getRules2(numOfNeigh, prevState) {
     }
   }
 
-  /*
+
   for (let i=0;i<size;i++) {
     for (let j=0;j<size;j++) {
       if (tempMap[i][j]!==0) {

@@ -27,24 +27,27 @@ export default function useWorkerUpdate(canvasRef, start, gameMap, setGameMap, l
     }
 
     function updateWorker(current, ctx, tempMap, gridSize) {
+
       lastUpdate = lastUpdate||current;
       let newMap;
       if (current-lastUpdate>interval) {
-
         lastUpdate = current;
         newMap = emptyArray(tempMap.length);
-
         const [part1, part2] = sliceOverlap(tempMap, cutLine);
 
         worker.sendData(part2);
+
         worker.receiveData((e)=>{
-          handleResult(ctx, e.data, tempMap, cutLine, gridSize,  lastColor, liveColor, newMap);
+
+          setAtNewMap(newMap, e.data, cutLine);
+          paintAll(ctx, newMap, tempMap, gridSize,  lastColor, liveColor)
+          // handleResult(ctx, e.data, tempMap, cutLine, gridSize,  lastColor, liveColor, newMap);
           updatedMap.current = deepCopy(newMap);
 
         });
 
-        handleResult(ctx, calMatrix(part1), tempMap, 0, gridSize,  lastColor, liveColor, newMap);
-
+        // handleResult(ctx, calMatrix(part1), tempMap, 0, gridSize,  lastColor, liveColor, newMap);
+        setAtNewMap(newMap, calMatrix(part1), 0);
       }
 
       animateId.current = requestAnimationFrame(
@@ -84,11 +87,22 @@ function forLoop(baseR, data, callback) {
 }
 
 function paintRange(ctx, data, tempMap, baseR, gridSize,  lastColor, liveColor) {
-  forLoop(baseR, data, (i,j,data)=>{
-    const newVal = data[i][j];
-    const oldVal = tempMap[partToMapIndex(i,j,baseR)][j];
-    paintAt(ctx, partToMapIndex(i,j,baseR), j, newVal, oldVal, tempMap.length, gridSize, lastColor, liveColor)
-  });
+  const [begin, end] = baseR===0?[0,data.length-1]:[1,data.length]
+  for (let i=begin;i<end;i++) {
+    for (let j=0;j<data[0].length;j++) {
+      const newVal = data[i][j];
+      const oldVal = tempMap[partToMapIndex(i,j,baseR)][j];
+      paintAt(ctx, partToMapIndex(i,j,baseR), j, newVal, oldVal, tempMap.length, gridSize, lastColor, liveColor)
+    }
+  }
+}
+
+function paintAll(ctx, data, tempMap, gridSize,  lastColor, liveColor) {
+  for (let i=0;i<data.length;i++) {
+    for (let j = 0; j < data[0].length; j++) {
+      paintAt(ctx, i, j, data[i][j], tempMap[i][j], tempMap.length, gridSize, lastColor, liveColor)
+    }
+  }
 }
 
 function paintAt(ctx, r, c,newVal, oldVal, size, gridSize,  lastColor, liveColor) {
@@ -114,7 +128,9 @@ function fork(task) {
   const worker = new WorkerBuilder(task);
   return {
     sendData(...data) {
+      // console.time('send')
       worker.postMessage(...data)
+      // console.timeEnd('send')
     },
     receiveData(callback) {
       worker.onmessage = callback;

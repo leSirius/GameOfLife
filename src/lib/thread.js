@@ -2,6 +2,7 @@
 
 export default function thread() {
   self.onmessage = function(eve){
+
     const map = calMatrix(eve.data);
     self.postMessage(map);
   }
